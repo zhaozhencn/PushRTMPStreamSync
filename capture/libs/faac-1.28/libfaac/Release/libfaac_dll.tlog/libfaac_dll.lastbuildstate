@@ -1,0 +1,2 @@
+#TargetFrameworkVersion=v4.0:PlatformToolSet=v120:EnableManagedIncrementalBuild=false:VCToolArchitecture=Native32Bit
+Release|Win32|E:\github\PushRTMPStreamSync\capture\libs\faac-1.28\libfaac\|

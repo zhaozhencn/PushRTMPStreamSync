@@ -1,0 +1,1 @@
+%MPC_ROOT%\mpc.pl -type make encode_wrapper.mpc

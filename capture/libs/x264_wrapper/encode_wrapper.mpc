@@ -1,0 +1,33 @@
+project(encode_wrapper) {
+  sharedname   = X264EncoderWrapper
+  
+  specific(make) {
+    libout = ../../Release
+    Release::linkflags = -fvisibility=hidden
+    Debug::linkflags = -fvisibility=hidden
+	includes += ../x264-snapshot-20160313-2245
+	libpaths += ../x264-snapshot-20160313-2245
+    libs += stdc++ 
+	libs += dl
+	libs += pthread
+	libs += x264
+    cc = gcc
+    cxx = g++
+    optimize = 1
+    genflags = -O3
+	dynamicflags = ENCODE_WRAPPER_EXPORT_API
+  }
+
+  Source_Files {
+	encode_wrapper.cpp
+  }
+  
+  Header_Files {
+	encode_wrapper.h
+  }
+}
+
+
+
+
+

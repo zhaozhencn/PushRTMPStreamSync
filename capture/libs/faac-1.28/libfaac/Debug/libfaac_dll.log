@@ -1,0 +1,66 @@
+﻿生成启动时间为 2016/4/12 19:31:15。
+     1>项目“E:\github\PushRTMPStreamSync\capture\libs\faac-1.28\libfaac\libfaac_dll.vcxproj”在节点 2 上(Build 个目标)。
+     1>ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /I../include /ZI /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _DEBUG /D _WINDOWS /D _USRDLL /D LIBFAAC_DLL_EXPORTS /D _VC80_UPGRADE=0x0700 /D _WINDLL /D _MBCS /Gm- /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo".\Debug/" /Fd".\Debug/vc120.pdb" /Gd /TC /analyze- /errorReport:prompt aacquant.c backpred.c bitstream.c channels.c fft.c filtbank.c frame.c huffman.c ltp.c midside.c psychkni.c tns.c util.c
+         aacquant.c
+     1>e:\github\pushrtmpstreamsync\capture\libs\faac-1.28\libfaac\aacquant.c(198): warning C4244: “函数”: 从“double”转换到“int”，可能丢失数据
+     1>e:\github\pushrtmpstreamsync\capture\libs\faac-1.28\libfaac\aacquant.c(337): warning C4307: “*”: 整型常量溢出
+     1>e:\github\pushrtmpstreamsync\capture\libs\faac-1.28\libfaac\aacquant.c(337): warning C4244: “=”: 从“double”转换到“float”，可能丢失数据
+     1>e:\github\pushrtmpstreamsync\capture\libs\faac-1.28\libfaac\aacquant.c(446): warning C4244: “=”: 从“double”转换到“int”，可能丢失数据
+     1>e:\github\pushrtmpstreamsync\capture\libs\faac-1.28\libfaac\aacquant.c(447): warning C4244: “=”: 从“double”转换到“int”，可能丢失数据
+     1>e:\github\pushrtmpstreamsync\capture\libs\faac-1.28\libfaac\aacquant.c(602): warning C4244: “=”: 从“double”转换到“int”，可能丢失数据
+     1>e:\github\pushrtmpstreamsync\capture\libs\faac-1.28\libfaac\aacquant.c(614): warning C4244: “=”: 从“double”转换到“int”，可能丢失数据
+         backpred.c
+         bitstream.c
+     1>e:\github\pushrtmpstreamsync\capture\libs\faac-1.28\libfaac\bitstream.c(122): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+                 c:\program files (x86)\microsoft visual studio 12.0\vc\include\stdio.h(356) : 参见“sprintf”的声明
+     1>e:\github\pushrtmpstreamsync\capture\libs\faac-1.28\libfaac\bitstream.c(124): warning C4013: “strlen”未定义；假设外部返回 int
+         channels.c
+         fft.c
+     1>e:\github\pushrtmpstreamsync\capture\libs\faac-1.28\libfaac\fft.c(614): warning C4244: “=”: 从“double”转换到“fftfloat”，可能丢失数据
+     1>e:\github\pushrtmpstreamsync\capture\libs\faac-1.28\libfaac\fft.c(615): warning C4244: “=”: 从“double”转换到“fftfloat”，可能丢失数据
+         filtbank.c
+         frame.c
+     1>e:\github\pushrtmpstreamsync\capture\libs\faac-1.28\libfaac\frame.c(235): warning C4244: “=”: 从“double”转换到“unsigned int”，可能丢失数据
+     1>e:\github\pushrtmpstreamsync\capture\libs\faac-1.28\libfaac\frame.c(241): warning C4244: “=”: 从“double”转换到“unsigned int”，可能丢失数据
+     1>e:\github\pushrtmpstreamsync\capture\libs\faac-1.28\libfaac\frame.c(242): warning C4244: “=”: 从“double”转换到“unsigned long”，可能丢失数据
+     1>e:\github\pushrtmpstreamsync\capture\libs\faac-1.28\libfaac\frame.c(245): warning C4018: “>”: 有符号/无符号不匹配
+     1>e:\github\pushrtmpstreamsync\capture\libs\faac-1.28\libfaac\frame.c(330): warning C4244: “=”: 从“const double”转换到“unsigned int”，可能丢失数据
+     1>e:\github\pushrtmpstreamsync\capture\libs\faac-1.28\libfaac\frame.c(331): warning C4018: “>”: 有符号/无符号不匹配
+     1>e:\github\pushrtmpstreamsync\capture\libs\faac-1.28\libfaac\frame.c(533): warning C4018: “<”: 有符号/无符号不匹配
+     1>e:\github\pushrtmpstreamsync\capture\libs\faac-1.28\libfaac\frame.c(545): warning C4018: “<”: 有符号/无符号不匹配
+     1>e:\github\pushrtmpstreamsync\capture\libs\faac-1.28\libfaac\frame.c(557): warning C4018: “<”: 有符号/无符号不匹配
+         huffman.c
+         ltp.c
+         midside.c
+         psychkni.c
+     1>e:\github\pushrtmpstreamsync\capture\libs\faac-1.28\libfaac\psychkni.c(346): warning C4244: “=”: 从“double”转换到“int”，可能丢失数据
+     1>e:\github\pushrtmpstreamsync\capture\libs\faac-1.28\libfaac\psychkni.c(393): warning C4244: “=”: 从“double”转换到“psyfloat”，可能丢失数据
+         tns.c
+         util.c
+         正在生成代码...
+     1>C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\V120\Microsoft.CppBuild.targets(1193,5): warning MSB8012: TargetPath(E:\github\PushRTMPStreamSync\capture\libs\faac-1.28\libfaac\.\DebugDLL\libfaac_dll.dll) does not match the Linker's OutputFile property value (E:\github\PushRTMPStreamSync\capture\libs\faac-1.28\libfaac\DebugDLL\libfaac.dll). This may cause your project to build incorrectly. To correct this, please make sure that $(OutDir), $(TargetName) and $(TargetExt) property values match the value specified in %(Link.OutputFile).
+     1>C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\V120\Microsoft.CppBuild.targets(1195,5): warning MSB8012: TargetName(libfaac_dll) does not match the Linker's OutputFile property value (libfaac). This may cause your project to build incorrectly. To correct this, please make sure that $(OutDir), $(TargetName) and $(TargetExt) property values match the value specified in %(Link.OutputFile).
+       Link:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"DebugDLL/libfaac.dll" /INCREMENTAL /NOLOGO odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /DEF:".\libfaac.def" /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:".\DebugDLL/libfaac.pdb" /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:".\DebugDLL/libfaac.lib" /MACHINE:X86 /SAFESEH /MACHINE:I386 /DLL .\Debug/aacquant.obj
+         .\Debug/backpred.obj
+         .\Debug/bitstream.obj
+         .\Debug/channels.obj
+         .\Debug/fft.obj
+         .\Debug/filtbank.obj
+         .\Debug/frame.obj
+         .\Debug/huffman.obj
+         .\Debug/ltp.obj
+         .\Debug/midside.obj
+         .\Debug/psychkni.obj
+         .\Debug/tns.obj
+         .\Debug/util.obj
+         LINK : 没有找到 DebugDLL/libfaac.dll 或上一个增量链接没有生成它；正在执行完全链接
+     1>aacquant.obj : warning LNK4075: 忽略“/EDITANDCONTINUE”(由于“/SAFESEH”规范)
+            正在创建库 .\DebugDLL/libfaac.lib 和对象 .\DebugDLL/libfaac.exp
+         libfaac_dll.vcxproj -> E:\github\PushRTMPStreamSync\capture\libs\faac-1.28\libfaac\.\DebugDLL\libfaac_dll.dll
+     1>已完成生成项目“E:\github\PushRTMPStreamSync\capture\libs\faac-1.28\libfaac\libfaac_dll.vcxproj”(Build 个目标)的操作。
+
+生成成功。
+
+已用时间 00:00:00.96

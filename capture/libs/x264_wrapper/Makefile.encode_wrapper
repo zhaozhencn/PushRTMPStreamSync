@@ -1,0 +1,83 @@
+#----------------------------------------------------------------------------
+#       Macros
+#----------------------------------------------------------------------------
+CC            = gcc
+CXX           = g++
+LD            = $(CXX) $(CCFLAGS) $(CPPFLAGS)
+AR            = ar
+PICFLAGS      = -fPIC
+CPPFLAGS      = $(PICFLAGS) $(GENFLAGS) -D_REENTRANT -I"../x264-snapshot-20160313-2245"
+OBJEXT        = .o
+OUTPUT_OPTION = -o "$@"
+COMPILE.c     = $(CC) $(CFLAGS) $(CPPFLAGS) -c
+COMPILE.cc    = $(CXX) $(CCFLAGS) $(CPPFLAGS) -c
+LDFLAGS       = -L"." -L"../x264-snapshot-20160313-2245" -fvisibility=hidden
+CCC           = $(CXX)
+MAKEFILE      = Makefile.encode_wrapper
+DEPENDENCIES  = .depend.$(MAKEFILE)
+LTARGETDIR    = ../../Release/
+CAT           = cat
+MV            = mv -f
+RM            = rm -rf
+CP            = cp -p
+NUL           = /dev/null
+MKDIR         = mkdir -p
+TESTDIRSTART  = test -d
+TESTDIREND    = ||
+TOUCH         = touch
+EXEEXT        = 
+LIBPREFIX     = lib
+LIBSUFFIX     = 
+GENFLAGS      = -O3
+LDLIBS        = -l"x264$(LIBSUFFIX)" -l"stdc++$(LIBSUFFIX)" 
+OBJS          = encode_wrapper$(OBJEXT)
+AREXT         = .a
+LIB           = $(LTARGETDIR)$(LIBPREFIX)X264EncoderWrapper$(LIBSUFFIX)$(AREXT)
+SOEXT         = .so
+SHTARGETDIR   = ../../Release/
+SHLIB         = $(SHTARGETDIR)$(LIBPREFIX)X264EncoderWrapper$(LIBSUFFIX)$(SOEXT)
+SHFLAGS       = -shared
+SRC           = encode_wrapper.cpp
+LINK.cc       = $(LD) $(LDFLAGS)
+DYNAMICFLAGS  = -DENCODE_WRAPPER_EXPORT_API
+EXPORTFLAGS   = $(DYNAMICFLAGS)
+DEPLIBS       = $(foreach lib, x264$(LIBSUFFIX) stdc++$(LIBSUFFIX) , $(foreach libpath, . ../x264-snapshot-20160313-2245, $(wildcard $(libpath)/lib$(lib).a)))
+
+#----------------------------------------------------------------------------
+#       Local targets
+#----------------------------------------------------------------------------
+
+all: $(SHLIB)
+
+$(SHLIB): $(OBJS) $(DEPLIBS)
+	@$(TESTDIRSTART) "$(SHTARGETDIR)" $(TESTDIREND) $(MKDIR) "$(SHTARGETDIR)"
+	$(LINK.cc) $(SHFLAGS) $(OBJS) $(LDLIBS) $(OUTPUT_OPTION)
+
+$(LIB): $(OBJS)
+	@$(TESTDIRSTART) "$(LTARGETDIR)" $(TESTDIREND) $(MKDIR) "$(LTARGETDIR)"
+	$(AR) $(ARFLAGS) $(LIB) $(OBJS)
+
+generated: $(GENERATED_DIRTY)
+	@-:
+
+encode_wrapper$(OBJEXT): encode_wrapper.cpp
+	$(COMPILE.cc) $(EXPORTFLAGS) $(OUTPUT_OPTION) encode_wrapper.cpp
+
+clean:
+	-$(RM) $(OBJS)
+
+realclean: clean
+	-$(RM) $(SHLIB) $(LIB)
+
+check-syntax:
+	$(COMPILE.cc) $(EXPORTFLAGS) -Wall -Wextra -pedantic -fsyntax-only $(CHK_SOURCES)
+
+#----------------------------------------------------------------------------
+#       Dependencies
+#----------------------------------------------------------------------------
+
+
+depend:
+	-$(MPC_ROOT)/depgen.pl  $(CFLAGS) $(CCFLAGS) $(CPPFLAGS) -f $(DEPENDENCIES) $(SRC) 2> $(NUL)
+
+-include $(DEPENDENCIES)
