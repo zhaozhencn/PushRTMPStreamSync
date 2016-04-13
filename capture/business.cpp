@@ -1,6 +1,5 @@
 #include "business.h"
 #include <fstream>
-#include "swscale_wrapper.h"
 #include "opencv/cv.h" 
 #include "opencv/highgui.h" 
 #include "util.h"
