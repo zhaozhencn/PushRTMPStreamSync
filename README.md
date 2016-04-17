@@ -2,6 +2,7 @@
 push audio and video stream on rtmp protocol synchronously
 
 usage step:
+
 1 building x264_wrapper using mingw
  cd libs\x264_wrapper
  make -f Makefile.encode_wrapper
