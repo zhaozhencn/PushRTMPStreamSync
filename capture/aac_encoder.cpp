@@ -14,11 +14,12 @@ aac_encoder::~aac_encoder()
 }
 
 
-void* aac_encoder::open_audio_encoder(int samples_per_sec, int channel, void* user_data, audio_enc_cb_t cb)
+void* aac_encoder::open_audio_encoder(int samples_per_sec, int channel, void* user_data, audio_enc_cb_t cb, int audio_idx)
 {
 	this->handler_ = faacEncOpen(samples_per_sec, channel, &this->input_samples_, &this->max_output_bytes_);
 	this->buf_.assign(this->max_output_bytes_, 0);
 	this->user_data_ = user_data;
+	this->audio_idx_ = audio_idx;
 
 	faacEncConfigurationPtr pConfiguration = faacEncGetCurrentConfiguration(handler_);
 	pConfiguration->inputFormat = FAAC_INPUT_16BIT;
@@ -37,7 +38,7 @@ void* aac_encoder::open_audio_encoder(int samples_per_sec, int channel, void* us
 	faacEncGetDecoderSpecificInfo(handler_, &buf, &pSizeOfDecoderSpecificInfo);
 
 	if (cb)
-		cb((void*)handler_, (const char*)buf, pSizeOfDecoderSpecificInfo, this->user_data_, true);
+		cb((void*)handler_, (const char*)buf, pSizeOfDecoderSpecificInfo, this->user_data_, true, this->audio_idx_);
 
 	free(buf);
 	return handler_;
@@ -51,7 +52,7 @@ void aac_encoder::audio_encode(void* h, const char* in_buf, long in_size, audio_
 		char* p = (char*)this->buf_.c_str();
 		int len = faacEncEncode(handler_, (int32_t*)in_buf, this->input_samples_, (unsigned char*)p, this->max_output_bytes_);
 		if (len > 0)
-			cb((void*)h, p, len, this->user_data_, false);
+			cb((void*)h, p, len, this->user_data_, false, this->audio_idx_);
 	}
 }
 

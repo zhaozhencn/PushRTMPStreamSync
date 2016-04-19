@@ -1,8 +1,5 @@
 #pragma once
 
-#define __STDC_CONSTANT_MACROS
-#define __STDC_LIMIT_MACROS
-
 #include <cstdint>
 #include <mutex>
 #include <queue>
@@ -19,26 +16,33 @@
 #include "librtmp/rtmp_sys.h"
 #include "librtmp/log.h"
 
-
+class push_rtmp_stream_man;
 class push_rtmp_stream
 {
 public:
-	push_rtmp_stream();
+	push_rtmp_stream(push_rtmp_stream_man* man);
 	~push_rtmp_stream();
 
 public:
-	int init(const std::string& url);
+	push_rtmp_stream(const push_rtmp_stream&) = delete;
+	push_rtmp_stream& operator = (const push_rtmp_stream&) = delete;
+	push_rtmp_stream(push_rtmp_stream&&) = delete;
+	push_rtmp_stream& operator = (push_rtmp_stream&&) = delete;
+
+public:
+	int init(const std::string& url, int camera_idx, int audio_idx);
 	void fini();
 
 public:
-	static void execute(void* h, const char* out_buf, long out_size, int frame_type, void* user_data, unsigned long long time_stamp);
-	static int execute_audio(void* h, const char* out_buf, long out_size, void* user_data, bool is_header);
+	void video_cb(void* h, const char* out_buf, long out_size, int frame_type, unsigned long long time_stamp);
+	void audio_cb(void* h, const char* out_buf, long out_size, bool is_header);
 
 public:
 	void add_audio_to_send_list(unsigned long long time_stamp, const std::string& data);
 	void add_video_to_send_list(unsigned long long time_stamp, const std::string& data);
 
 protected:
+	void start_thread();
 	void sync_stream_thread_entry();
 	void send_thread_entry();
 
@@ -46,21 +50,28 @@ protected:
 	void execute_impl(void* h, const char* out_buf, long out_size, int frame_type, unsigned long long time_stamp);
 
 private:
-	void send_video_sps_pps();
-	void send_rtmp_audio_header();
+	enum { MAX_WAIT_TIMES_THRESHOLD = 100 };
 
 private:
-	void send_rtmp_video(unsigned char * buf, int len, unsigned long long time_stamp);
-	void send_rtmp_audio(unsigned char* buf, int len, unsigned long long time_stamp);
+	int send_video_sps_pps();
+	int send_rtmp_audio_header();
+
+private:
+	int send_rtmp_video(unsigned char * buf, int len, unsigned long long time_stamp);
+	int send_rtmp_audio(unsigned char* buf, int len, unsigned long long time_stamp);
 	void execute_audio_i(void* h, const char* out_buf, long out_size, bool is_header);
 
 private:
+	std::string						url_;
+	int								camera_idx_;
+	int								audio_idx_;
 	RTMP*							rtmp_;
 	RTMPPacket*						packet_;
 		
 	std::string						sps_;
 	std::string						pps_;
 	std::string						audio_header_;
+	bool							once_;
 
 private:
 	std::shared_ptr<std::thread>	sync_stream_thread_;
@@ -84,6 +95,9 @@ private:
 
 private:
 	std::atomic<int>				curr_step_;
+	
+private:
+	push_rtmp_stream_man*			man_;
 };
 
 

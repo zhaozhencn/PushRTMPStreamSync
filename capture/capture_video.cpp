@@ -1,5 +1,5 @@
 #include "capture_video.h"
-
+#include "util.h"
 
 
 capture_video::capture_video()
@@ -19,8 +19,9 @@ capture_video::~capture_video()
 
 int capture_video::enum_devs()
 {
+	com_lib_helper helper;
 	int id = 0;
-	::CoInitialize(0);
+
 
 	ICreateDevEnum *pCreateDevEnum;
 	HRESULT hr = CoCreateInstance(CLSID_SystemDeviceEnum, NULL, CLSCTX_INPROC_SERVER, IID_ICreateDevEnum, (void**)&pCreateDevEnum);
@@ -57,13 +58,13 @@ int capture_video::enum_devs()
 }
 
 
-int capture_video::start(int dev_idx, int rate, yuv_callback cb, long user_data)
+int capture_video::start(int camera_idx, int rate, yuv_callback cb, long user_data)
 {
 	if (flag_run_)
 		return 0;
 
 	flag_run_ = true;
-	idx_ = dev_idx;
+	idx_ = camera_idx;
 	interval_ = 1000 / rate;
 	yuv_ = cb;
 	user_data_ = user_data;
@@ -75,15 +76,18 @@ int capture_video::start(int dev_idx, int rate, yuv_callback cb, long user_data)
 
 void capture_video::stop()
 {
-	flag_run_ = false;
-	// this->wait();
+	if (this->thr_.get_id() != std::thread::id())
+	{
+		flag_run_ = false;
+		this->thr_.join();
+	}
 }
 
 #define MACRO_DEFAULT_INTERVAL 66
+
 int capture_video::svc()
 {
 	printf("capture_video::svc() chan[%d] enter \n", idx_);
-	//ACE_thread_t tid = ACE_OS::thr_self();
 	CvCapture *cap = cvCreateCameraCapture(idx_);
 	if (!cap)
 	{
@@ -121,9 +125,7 @@ int capture_video::svc()
 #endif
 
 		if (NULL != yuv_)
-		{
-			yuv_(img, user_data_);
-		}
+			yuv_(img, this->user_data_, this->idx_);
 
 		t1 = ::GetTickCount();
 		DWORD diff = t1 - t0;

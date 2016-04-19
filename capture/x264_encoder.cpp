@@ -3,7 +3,7 @@
 #include <Windows.h>
 
 
-typedef void* (*open_encoder_t)(int width, int height, int bitrate, int fps, int bitstream_ctl, void* user_data);
+typedef void* (*open_encoder_t)(int width, int height, int bitrate, int fps, int bitstream_ctl, void* user_data, int camera_idx);
 typedef int(*encode_t)(void* h, const char* in_buf, long in_size, enc_cb_t cb, unsigned long long time_stamp, bool force_key_frame);
 typedef void(*close_encoder_t)(void* h);
 
@@ -32,9 +32,9 @@ x264_encoder::~x264_encoder(void)
 }
 
 
-HANDLE x264_encoder::open_encoder(int width, int height, int bitrate, int fps, int bitstream_ctl, void* user_data)
+HANDLE x264_encoder::open_encoder(int width, int height, int bitrate, int fps, int bitstream_ctl, void* user_data, int camera_idx)
 {
-	return open_encoder_fun(width, height, bitrate, fps, bitstream_ctl, user_data);
+	return open_encoder_fun(width, height, bitrate, fps, bitstream_ctl, user_data, camera_idx);
 }
 
 

@@ -6,8 +6,6 @@ int main(int, char**)
 
 	business b;
 	b.start();
-
-	Sleep(INFINITE);
 	return 0;
 }
 

@@ -1,5 +1,7 @@
 #include "push_rtmp_stream.h"
 #include "util.h"
+#include "push_rtmp_stream_man.h"
+#include "comm.h"
 
 #define STREAM_CHANNEL_METADATA  0x03  
 #define STREAM_CHANNEL_VIDEO     0x04  
@@ -13,10 +15,12 @@
 
 
 
-push_rtmp_stream::push_rtmp_stream()
+push_rtmp_stream::push_rtmp_stream(push_rtmp_stream_man* man)
 	: rtmp_(NULL)
 	, packet_(NULL)
+	, once_(true)
 	, curr_step_(0)
+	, man_(man)
 {
 }
 
@@ -34,8 +38,12 @@ push_rtmp_stream::~push_rtmp_stream()
 }
 
 
-int push_rtmp_stream::init(const std::string& url)
+int push_rtmp_stream::init(const std::string& url, int camera_idx, int audio_idx)
 {
+	this->url_ = url;
+	this->camera_idx_ = camera_idx;
+	this->audio_idx_ = audio_idx;
+
 	RTMP_LogLevel lvl = RTMP_LOGINFO;
 	RTMP_LogSetLevel(lvl);
 	rtmp_ = RTMP_Alloc();
@@ -61,9 +69,6 @@ int push_rtmp_stream::init(const std::string& url)
 
 	this->sync_stream_thread_ = std::shared_ptr<std::thread>(
 		new std::thread(&push_rtmp_stream::sync_stream_thread_entry, this));
-
-	this->send_thread_ = std::shared_ptr<std::thread>(
-		new std::thread(&push_rtmp_stream::send_thread_entry, this));
 	
 	return 0;
 }
@@ -71,7 +76,9 @@ int push_rtmp_stream::init(const std::string& url)
 
 void push_rtmp_stream::fini()
 {
-	this->curr_step_ = 0;		// notify thread exit
+	this->curr_step_ = 0;			// notify thread exit
+	this->cv_to_send_.notify_all();
+	this->cv_video_.notify_all();
 
 	if (this->sync_stream_thread_.get())
 	{
@@ -103,31 +110,7 @@ void push_rtmp_stream::fini()
 }
 
 
-enum nal_unit_type_e
-{
-	NAL_UNKNOWN = 0,
-	NAL_SLICE = 1,
-	NAL_SLICE_DPA = 2,
-	NAL_SLICE_DPB = 3,
-	NAL_SLICE_DPC = 4,
-	NAL_SLICE_IDR = 5,    /* ref_idc != 0 */
-	NAL_SEI = 6,    /* ref_idc == 0 */
-	NAL_SPS = 7,
-	NAL_PPS = 8,
-	NAL_AUD = 9,
-	NAL_FILLER = 12,
-	/* ref_idc == 0 for 6,9,10,11,12 */
-};
-
-
-void push_rtmp_stream::execute(void* h, const char* out_buf, long out_size, int frame_type, void* user_data, unsigned long long time_stamp)
-{
-	push_rtmp_stream* p = (push_rtmp_stream*)user_data;
-	p->execute_impl(h, out_buf, out_size, frame_type, time_stamp);
-}
-
-
-void push_rtmp_stream::send_video_sps_pps()
+int push_rtmp_stream::send_video_sps_pps()
 {
 	unsigned char *body = (unsigned char *)this->packet_->m_body;
 	int i = 0;
@@ -170,11 +153,11 @@ void push_rtmp_stream::send_video_sps_pps()
 	this->packet_->m_headerType = RTMP_PACKET_SIZE_MEDIUM;
 	this->packet_->m_nInfoField2 = this->rtmp_->m_stream_id;
 
-	RTMP_SendPacket(this->rtmp_, this->packet_, TRUE);
+	return RTMP_SendPacket(this->rtmp_, this->packet_, TRUE) ? 0 : -1;
 }
 
 
-void push_rtmp_stream::send_rtmp_video(unsigned char * buf, int len, unsigned long long time_stamp)
+int push_rtmp_stream::send_rtmp_video(unsigned char* buf, int len, unsigned long long time_stamp)
 {
 	unsigned char *body = (unsigned char *)this->packet_->m_body;
 
@@ -217,19 +200,39 @@ void push_rtmp_stream::send_rtmp_video(unsigned char * buf, int len, unsigned lo
 	this->packet_->m_headerType = RTMP_PACKET_SIZE_LARGE;
 	this->packet_->m_nTimeStamp = time_stamp;
 
-	RTMP_SendPacket(this->rtmp_, this->packet_, TRUE);
+	return RTMP_SendPacket(this->rtmp_, this->packet_, TRUE) ? 0 : -1;
 }
 
 
-int push_rtmp_stream::execute_audio(void* h, const char* out_buf, long out_size, void* user_data, bool is_header)
+void push_rtmp_stream::video_cb(void* h, const char* out_buf, long out_size, int frame_type, unsigned long long time_stamp)
 {
-	push_rtmp_stream* p = (push_rtmp_stream*)user_data;
-	p->execute_audio_i(h, out_buf, out_size, is_header);
-	return 0;
+	// may recetive this->sps_ and pps one more times ???
+	if (once_)
+	{
+		if (frame_type == NAL_SPS)
+		{
+			this->sps_.assign(out_buf + 4, out_size - 4);
+		}
+		else if (frame_type == NAL_PPS)
+		{
+			this->pps_.assign(out_buf + 4, out_size - 4);
+			once_ = false;
+			++this->curr_step_;
+		}
+	}
+	else if (NAL_SLICE_IDR == frame_type || NAL_SLICE == frame_type)
+	{
+		if (this->curr_step_ < 3)
+			return;
+
+		std::unique_lock<std::mutex> g(this->cs_video_);
+		this->video_data_.push_back(std::make_tuple(time_stamp, frame_type, std::string(out_buf, out_size)));
+		this->cv_video_.notify_one();
+	}
 }
 
 
-void push_rtmp_stream::execute_audio_i(void* h, const char* out_buf, long out_size, bool is_header)
+void push_rtmp_stream::audio_cb(void* h, const char* out_buf, long out_size, bool is_header)
 {
 	if (is_header)
 	{
@@ -247,7 +250,8 @@ void push_rtmp_stream::execute_audio_i(void* h, const char* out_buf, long out_si
 	}
 }
 
-void push_rtmp_stream::send_rtmp_audio_header()
+
+int push_rtmp_stream::send_rtmp_audio_header()
 {
 	unsigned char* body = (unsigned char *)this->packet_->m_body;
 	this->packet_->m_nBodySize = audio_header_.length() + 2;
@@ -269,11 +273,11 @@ void push_rtmp_stream::send_rtmp_audio_header()
 	this->packet_->m_headerType = RTMP_PACKET_SIZE_LARGE;
 	this->packet_->m_nTimeStamp = 0; 
 
-	RTMP_SendPacket(this->rtmp_, this->packet_, FALSE);
+	return RTMP_SendPacket(this->rtmp_, this->packet_, FALSE) ? 0 : -1;
 }
 
 
-void push_rtmp_stream::send_rtmp_audio(unsigned char* buf, int len, unsigned long long time_stamp)
+int push_rtmp_stream::send_rtmp_audio(unsigned char* buf, int len, unsigned long long time_stamp)
 {
 	unsigned char* body = (unsigned char *)this->packet_->m_body;
 	this->packet_->m_nBodySize = len + 2;
@@ -295,61 +299,50 @@ void push_rtmp_stream::send_rtmp_audio(unsigned char* buf, int len, unsigned lon
 	this->packet_->m_headerType = RTMP_PACKET_SIZE_LARGE;
 	this->packet_->m_nTimeStamp = time_stamp;
 
-	RTMP_SendPacket(this->rtmp_, this->packet_, TRUE);
-}
-
-
-void push_rtmp_stream::execute_impl(void* h, const char* out_buf, long out_size, int frame_type, unsigned long long time_stamp)
-{
-	static bool once = true;
-
-	// may recetive this->sps_ and pps one more times ???
-	if (once)
-	{
-		if (frame_type == NAL_SPS) 
-		{
-			this->sps_.assign(out_buf + 4, out_size - 4);
-		}
-		else if (frame_type == NAL_PPS) 
-		{
-			this->pps_.assign(out_buf + 4, out_size - 4);
-			once = false;
-			++this->curr_step_;
-		}
-	}
-	else if (NAL_SLICE_IDR == frame_type || NAL_SLICE == frame_type)
-	{
-		if (this->curr_step_ < 3)
-			return;
-
-		std::unique_lock<std::mutex> g(this->cs_video_);
-		this->video_data_.push_back(std::make_tuple(time_stamp, frame_type, std::string(out_buf, out_size)));
-		this->cv_video_.notify_one();
-	}
+	return RTMP_SendPacket(this->rtmp_, this->packet_, TRUE) ? 0 : -1;
 }
 
 
 void push_rtmp_stream::sync_stream_thread_entry()
 {
 	// wait for received video sps (pps) and audio header
+	int max_waiting_time_threshold = 0;
 	while (this->curr_step_ < 2)
+	{
+		if (++max_waiting_time_threshold > MAX_WAIT_TIMES_THRESHOLD)
+			return;
+
 		Sleep(50);
+	}
+
 		
 	++this->curr_step_;		// increase curr_step_ to 3 for start push audio and video frame into buff
 
 	// send sps(pps) and audio header first
-	this->send_video_sps_pps();
-	this->send_rtmp_audio_header();
+	if (-1 == this->send_video_sps_pps() || -1 == send_rtmp_audio_header())
+	{
+		if (this->man_)
+			this->man_->notify_disconnect(this->url_, this->camera_idx_, this->audio_idx_);
+
+		return;
+	}
+
+	// start send thread when it already.
+	this->send_thread_ = std::shared_ptr<std::thread>(
+		new std::thread(&push_rtmp_stream::send_thread_entry, this));
 
 	unsigned long long first_video_time_stamp = -1;
 	unsigned long long curr_video_time_stamp = 0;
 	
-	for (; 3 == this->curr_step_; )
+	for (;;)
 	{
 		std::unique_lock<std::mutex> g(this->cs_video_);
-		this->cv_video_.wait(g, [this](){
-			return this->video_data_.size() > 1;
+		this->cv_video_.wait(g, [&](){
+			return this->video_data_.size() > 1 || 3 != this->curr_step_;
 		});
+
+		if (3 != this->curr_step_)
+			break;
 
 		video_data_list::const_reference d = this->video_data_.front();
 
@@ -400,13 +393,18 @@ void push_rtmp_stream::sync_stream_thread_entry()
 void push_rtmp_stream::send_thread_entry()
 {
 	bool need_send_first_video = true;
+	int ret = 0;
 
 	for (;;)
 	{
 		std::unique_lock<std::mutex> g(this->cs_to_send_);
-		this->cv_to_send_.wait(g, [this](){
-			return this->to_send_list_.size() > 10;
+		this->cv_to_send_.wait(g, [&](){
+			return this->to_send_list_.size() > 10 || 3 != this->curr_step_;
 		});
+
+		// notify exit thread
+		if (3 != this->curr_step_)
+			break;
 
 		mix_data_list::const_reference ref = this->to_send_list_.front();
 		auto time_stamp = std::get<0>(ref);
@@ -420,9 +418,15 @@ void push_rtmp_stream::send_thread_entry()
 		if (!need_send_first_video)
 		{
 			if (AUDIO == type)
-				this->send_rtmp_audio((unsigned char*)data.c_str(), data.length(), time_stamp);
+				ret = this->send_rtmp_audio((unsigned char*)data.c_str(), data.length(), time_stamp);
 			else
-				this->send_rtmp_video((unsigned char*)data.c_str(), data.length(), time_stamp);
+				ret = this->send_rtmp_video((unsigned char*)data.c_str(), data.length(), time_stamp);
+			
+			if (-1 == ret && this->man_)
+			{
+				this->man_->notify_disconnect(this->url_, this->camera_idx_, this->audio_idx_);
+				break;
+			}
 		}
 
 		to_send_list_.pop_front();

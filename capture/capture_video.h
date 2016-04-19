@@ -5,9 +5,6 @@
 #include <atlbase.h>
 #include <dshow.h>
 
-#define __STDC_CONSTANT_MACROS
-#define __STDC_LIMIT_MACROS
-
 #include <thread>
 
 #pragma comment(lib, "strmiids.lib")
@@ -28,7 +25,7 @@
 #pragma comment(lib, "cscc.lib")
 
 
-typedef void(*yuv_callback)(IplImage* img, long user_data);
+typedef void(*yuv_callback)(IplImage* img, long user_data, int camera_idx);
 
 #ifndef SAFE_RELEASE
 #define SAFE_RELEASE( x ) \
@@ -46,7 +43,7 @@ public:
 	capture_video();
 	virtual ~capture_video();
 
-	int		start(int dev_idx, int rate, yuv_callback cb, long user_data);
+	int		start(int camera_idx, int rate, yuv_callback cb, long user_data);
 	void	stop();
 
 	static int enum_devs();
