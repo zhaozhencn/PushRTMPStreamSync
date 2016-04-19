@@ -20,6 +20,21 @@ public:
 };
 
 
+class com_lib_helper
+{
+public:
+	com_lib_helper()
+	{
+		::CoInitialize(0);
+	}
+
+	~com_lib_helper()
+	{
+		::CoUninitialize();
+	}
+};
+
+
 class get_qpc_time_ms
 {
 public:

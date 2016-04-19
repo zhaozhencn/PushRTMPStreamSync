@@ -18,6 +18,7 @@ struct x264_enc_info
 	x264_param_t	param_;
 	x264_picture_t	pic_in_;
 	void*			user_data_;
+	int				camera_idx_;
 };
 
 std::map<unsigned long, x264_enc_info> g_enc_map;
@@ -145,7 +146,7 @@ X264_CONFIG_SET(x264_param_t*param, int mode)
 
 
 
-extern "C" void* open_encoder(int width, int height, int bitrate, int fps, int bitstream_ctl, void* user_data)
+extern "C" void* open_encoder(int width, int height, int bitrate, int fps, int bitstream_ctl, void* user_data, int camera_idx)
 {
 #define MY_SETTING
 #ifdef MY_SETTING
@@ -278,6 +279,7 @@ extern "C" void* open_encoder(int width, int height, int bitrate, int fps, int b
 	info.param_ = param;
 	info.pic_in_ = pic;
 	info.user_data_ = user_data;
+	info.camera_idx_ = camera_idx;
 
 	g_enc_map.insert(std::make_pair((unsigned long)p, info));
 	return p;	
@@ -326,7 +328,7 @@ extern "C" int encode(void* h, const char* in_buf, long in_size, enc_cb_t cb, un
 	else if (cb != NULL)
 	{
 		for (int i = 0; i < i_nal; ++i)
-			cb((void*)key, (char*)nal[i].p_payload, nal[i].i_payload, nal[i].i_type, ref.user_data_, time_stamp);
+			cb((void*)key, (char*)nal[i].p_payload, nal[i].i_payload, nal[i].i_type, ref.user_data_, time_stamp, ref.camera_idx_);
 	}
 
 	return 0;

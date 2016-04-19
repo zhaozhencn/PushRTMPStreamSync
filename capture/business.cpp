@@ -21,8 +21,8 @@ business::~business()
 #define	CHANNEL				2 
 #define BITS_PER_SAMPLE		16
 #define VIDEO_FPS			15
-#define CAMERA_IDX			0
-
+#define CAMERA_IDX			2
+#define AUDIO_IDX			0
 
 void business::start()
 {
@@ -33,7 +33,7 @@ void business::start()
 	int idx = capture_video::enum_devs();
 
 	capture_audio* p_audio = new capture_audio();
-	p_audio->start(SAMPLES_PER_SECOND, CHANNEL, BITS_PER_SAMPLE, business::cb_audio, (long)this);
+	p_audio->start(SAMPLES_PER_SECOND, CHANNEL, BITS_PER_SAMPLE, business::cb_audio, (long)this, AUDIO_IDX);
 
 	capture_video* p = new capture_video();
 	p->start(CAMERA_IDX, VIDEO_FPS, business::cb, (long)this);
@@ -42,21 +42,28 @@ void business::start()
 	Sleep(2000);
 
 	this->force_make_key_frame_ = true;
-	this->push_.init("rtmp://127.0.0.1:1935/live/test");
+	std::string url = "rtmp://192.168.1.159/live/test";
+	this->push_.start(url, CAMERA_IDX, 0);
 
+	printf("Running 350 secs for exiting..........................\n");
+	Sleep(350000);
+
+	p_audio->stop();
+	p->stop();
+	this->push_.stop(url);
 }
 
 
-void business::cb(IplImage* img, long user_data)
+void business::cb(IplImage* img, long user_data, int camera_idx)
 {
 	business* p = (business*)user_data;
-	p->cb_impl(img);
+	p->cb_impl(img, camera_idx);
 }
 
 
 #define CURR_FPS 15
 
-void business::cb_impl(IplImage* img)
+void business::cb_impl(IplImage* img, int camera_idx)
 {
 #define CQP	0
 #define CRF 1
@@ -70,7 +77,7 @@ void business::cb_impl(IplImage* img)
 			500,
 			CURR_FPS,
 			CRF,
-			(void*)&this->push_);
+			(void*)&this->push_, camera_idx);
 	}
 
 	int yuv_size = img->width * img->height * 3 / 2;
@@ -98,7 +105,8 @@ void business::cb_impl(IplImage* img)
 	if (0 == this->video_effect_->handle(yuv_buf, out_frame))
 	{
 		unsigned long long t = get_qpc_time_ms::exec();
-		this->x264_enc_.encode(this->h_, (const char*)out_frame.c_str(), out_frame.length(), push_rtmp_stream::execute, t, this->force_make_key_frame_);
+		this->x264_enc_.encode(this->h_, (const char*)out_frame.c_str(), out_frame.length(),
+			push_rtmp_stream_man::video_cb, t, this->force_make_key_frame_);
 
 		if (this->force_make_key_frame_)
 			this->force_make_key_frame_ = false;
@@ -106,19 +114,20 @@ void business::cb_impl(IplImage* img)
 }
 
 
-void business::cb_audio(unsigned char* raw_data, unsigned long len, long user_data)
+void business::cb_audio(unsigned char* raw_data, unsigned long len, long user_data, int audio_idx)
 {
 	business* p = (business*)user_data;
-	p->cb_audio_impl(raw_data, len);
+	p->cb_audio_impl(raw_data, len, audio_idx);
 }
 
 
-void business::cb_audio_impl(unsigned char* raw_data, unsigned long len)
+void business::cb_audio_impl(unsigned char* raw_data, unsigned long len, int audio_idx)
 {
 	if (INVALID_HANDLE_VALUE == this->h_audio_)
-		this->h_audio_ = aac_enc_.open_audio_encoder(SAMPLES_PER_SECOND, CHANNEL, (void*)&this->push_, push_rtmp_stream::execute_audio);
+		this->h_audio_ = aac_enc_.open_audio_encoder(SAMPLES_PER_SECOND, CHANNEL, (void*)&this->push_, 
+		push_rtmp_stream_man::audio_cb, audio_idx);
 
-	aac_enc_.audio_encode(this->h_audio_, (const char*)raw_data, len, push_rtmp_stream::execute_audio);
+	aac_enc_.audio_encode(this->h_audio_, (const char*)raw_data, len, push_rtmp_stream_man::audio_cb);
 }
 
 

@@ -1,8 +1,5 @@
 #pragma once
 
-#define __STDC_CONSTANT_MACROS
-#define __STDC_LIMIT_MACROS
-
 #include <stdio.h>
 #include <stdint.h>
 

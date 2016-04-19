@@ -47,7 +47,3 @@ dataDec.txt
 log.dec
 common/oclobj.h
 x264_lookahead.clbin
-AUTHORS
-configure
-COPYING
-Makefile

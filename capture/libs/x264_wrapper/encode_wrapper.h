@@ -7,9 +7,9 @@
 #define ENCODE_WRAPPER_API __declspec(dllimport)
 #endif
 
-typedef void(*enc_cb_t)(void* h, const char* out_buf, long out_size, int frame_type, void* user_data, unsigned long long time_stamp);
+typedef void(*enc_cb_t)(void* h, const char* out_buf, long out_size, int frame_type, void* user_data, unsigned long long time_stamp, int camera_idx);
 
-extern "C" ENCODE_WRAPPER_API void* open_encoder(int width, int height, int bitrate, int fps, int bitstream_ctl, void* user_data);
+extern "C" ENCODE_WRAPPER_API void* open_encoder(int width, int height, int bitrate, int fps, int bitstream_ctl, void* user_data, int camera_idx);
 
 extern "C" ENCODE_WRAPPER_API int encode(void* h, const char* in_buf, long in_size, enc_cb_t cb, unsigned long long time_stamp, bool force_key_frame);
 
