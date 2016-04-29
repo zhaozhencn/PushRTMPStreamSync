@@ -21,7 +21,7 @@ business::~business()
 #define	CHANNEL				2 
 #define BITS_PER_SAMPLE		16
 #define VIDEO_FPS			15
-#define CAMERA_IDX			2
+#define CAMERA_IDX			1
 #define AUDIO_IDX			0
 
 void business::start()
@@ -102,7 +102,7 @@ void business::cb_impl(IplImage* img, int camera_idx)
 		this->video_effect_ = video_effect_ptr(new video_effect(img->width, img->height, CURR_FPS));
 
 	std::string out_frame;
-	if (0 == this->video_effect_->handle(yuv_buf, out_frame))
+	if (0 == this->video_effect_->handle(yuv_buf, yuv_size, out_frame))
 	{
 		unsigned long long t = get_qpc_time_ms::exec();
 		this->x264_enc_.encode(this->h_, (const char*)out_frame.c_str(), out_frame.length(),
