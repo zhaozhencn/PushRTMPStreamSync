@@ -162,6 +162,7 @@
     <ClInclude Include="capture_audio.h" />
     <ClInclude Include="capture_video.h" />
     <ClInclude Include="collect_sound.h" />
+    <ClInclude Include="filter_wrapper.h" />
     <ClInclude Include="push_rtmp_stream.h" />
     <ClInclude Include="push_rtmp_stream_man.h" />
     <ClInclude Include="sche_timer.h" />
@@ -182,6 +183,7 @@
     <ClCompile Include="capture_audio.cpp" />
     <ClCompile Include="capture_video.cpp" />
     <ClCompile Include="collect_sound.cpp" />
+    <ClCompile Include="filter_wrapper.cpp" />
     <ClCompile Include="push_rtmp_stream.cpp" />
     <ClCompile Include="push_rtmp_stream_man.cpp" />
     <ClCompile Include="sche_timer.cpp" />
