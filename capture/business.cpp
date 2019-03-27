@@ -21,7 +21,7 @@ business::~business()
 #define	CHANNEL				2 
 #define BITS_PER_SAMPLE		16
 #define VIDEO_FPS			15
-#define CAMERA_IDX			1
+#define CAMERA_IDX			0
 #define AUDIO_IDX			0
 
 void business::start()

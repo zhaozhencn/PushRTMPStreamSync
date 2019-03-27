@@ -6,12 +6,12 @@ CXX           = g++
 LD            = $(CXX) $(CCFLAGS) $(CPPFLAGS)
 AR            = ar
 PICFLAGS      = -fPIC
-CPPFLAGS      = $(PICFLAGS) $(GENFLAGS) -D_REENTRANT -I"../x264-snapshot-20160313-2245"
+CPPFLAGS      = $(PICFLAGS) $(GENFLAGS) -D_REENTRANT -I"../x264"
 OBJEXT        = .o
 OUTPUT_OPTION = -o "$@"
 COMPILE.c     = $(CC) $(CFLAGS) $(CPPFLAGS) -c
 COMPILE.cc    = $(CXX) $(CCFLAGS) $(CPPFLAGS) -c
-LDFLAGS       = -L"." -L"../x264-snapshot-20160313-2245" -fvisibility=hidden
+LDFLAGS       = -L"." -L"../x264" -fvisibility=hidden
 CCC           = $(CXX)
 MAKEFILE      = Makefile.encode_wrapper
 DEPENDENCIES  = .depend.$(MAKEFILE)
@@ -41,7 +41,7 @@ SRC           = encode_wrapper.cpp
 LINK.cc       = $(LD) $(LDFLAGS)
 DYNAMICFLAGS  = -DENCODE_WRAPPER_EXPORT_API
 EXPORTFLAGS   = $(DYNAMICFLAGS)
-DEPLIBS       = $(foreach lib, x264$(LIBSUFFIX) stdc++$(LIBSUFFIX) , $(foreach libpath, . ../x264-snapshot-20160313-2245, $(wildcard $(libpath)/lib$(lib).a)))
+DEPLIBS       = $(foreach lib, x264$(LIBSUFFIX) stdc++$(LIBSUFFIX) , $(foreach libpath, . ../x264, $(wildcard $(libpath)/lib$(lib).a)))
 
 #----------------------------------------------------------------------------
 #       Local targets

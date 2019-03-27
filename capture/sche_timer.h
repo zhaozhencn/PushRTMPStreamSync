@@ -1,7 +1,7 @@
 #pragma once
 
 #include <functional>
-#include <hash_map>
+#include <unordered_map>
 #include <mutex>
 #include <memory>
 
@@ -61,7 +61,7 @@ private:
 	enum { DELETE_TAG = -10 };
 
 private:
-	typedef std::hash_map<unsigned long long, node> node_map;
+	typedef std::unordered_map<unsigned long long, node> node_map;
 	node_map						node_map_;
 	std::recursive_mutex			mutex_;
 
