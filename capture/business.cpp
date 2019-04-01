@@ -24,33 +24,38 @@ business::~business()
 #define CAMERA_IDX			0
 #define AUDIO_IDX			0
 
-void business::start()
+void business::start(const std::string& rtmp_url, int camera_idx, int audio_idx)
 {
 	this->h_ = INVALID_HANDLE_VALUE;
 	this->h_audio_ = INVALID_HANDLE_VALUE;
 	this->force_make_key_frame_ = true;
 
 	int idx = capture_video::enum_devs();
+	if (camera_idx >= idx)
+	{
+		printf("no camera device\n");
+		return;
+	}
 
 	capture_audio* p_audio = new capture_audio();
-	p_audio->start(SAMPLES_PER_SECOND, CHANNEL, BITS_PER_SAMPLE, business::cb_audio, (long)this, AUDIO_IDX);
+	p_audio->start(SAMPLES_PER_SECOND, CHANNEL, BITS_PER_SAMPLE, business::cb_audio, (long)this, audio_idx);
 
 	capture_video* p = new capture_video();
-	p->start(CAMERA_IDX, VIDEO_FPS, business::cb, (long)this);
+	p->start(camera_idx, VIDEO_FPS, business::cb, (long)this);
 
 	printf("Sleep 2 secs..........................\n");
 	Sleep(2000);
 
 	this->force_make_key_frame_ = true;
-	std::string url = "rtmp://192.168.1.159/live/test";
-	this->push_.start(url, CAMERA_IDX, 0);
+	// std::string url = "rtmp://192.168.138.128/live/test";
+	this->push_.start(rtmp_url, CAMERA_IDX, 0);
 
 	printf("Running 350 secs for exiting..........................\n");
 	Sleep(350000);
 
 	p_audio->stop();
 	p->stop();
-	this->push_.stop(url);
+	this->push_.stop(rtmp_url);
 }
 
 

@@ -16,7 +16,7 @@ public:
 	~business();
 
 public:
-	void start();
+	void start(const std::string& rtmp_url, int camera_idx, int audio_idx);
 
 public:
 	static void cb(IplImage* img, long user_data, int camera_idx);

@@ -121,7 +121,7 @@ int capture_video::svc()
 #if 1
 		// cvCopy(tempImg, img);
 		if (img->origin == IPL_ORIGIN_TL)
-			cvFlip(img, img, -1);
+			cvFlip(img, img, 0);
 #endif
 
 		if (NULL != yuv_)
